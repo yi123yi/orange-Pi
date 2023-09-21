@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "controldevices.h": "c",
+        "inputcommander.h": "c"
+    }
+}
