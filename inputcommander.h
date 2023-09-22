@@ -21,3 +21,4 @@ struct  InputCommander
 
 struct InputCommander* addvoiceContrlToInputCommandLink(struct InputCommander *phead);
 struct InputCommander* addsocketContrlToInputCommandLink(struct InputCommander *phead);
+struct InputCommander* addSpeechContrlToInputCommandLink(struct InputCommander *phead);
