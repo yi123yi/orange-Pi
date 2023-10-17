@@ -26,7 +26,7 @@
 #endif
 
 
-#define 	FIFO_SIZE   128
+#define 	FIFO_SIZE   1024
 
 /* CAN通信抽象结构体定义*/
 // struct SockerCan
@@ -71,6 +71,6 @@ typedef struct
   can_queue_t *recv_queue;
 } can_t;
  
-void *CanInit(int arg);
+// void *CanInit(int arg);
  
 #endif /* _CAN_H_ */

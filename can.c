@@ -9,9 +9,9 @@ extern uint8_t cmd[16] ;
 
 
 
-static can_t *can_init(int name)
+static can_t *can_init()
 {
-  int ret;
+  int ret,set;
   struct sockaddr_can addr;
   struct ifreq ifr;
   struct can_filter rfilter[1];
@@ -22,6 +22,10 @@ static can_t *can_init(int name)
   {
       perror("socket can creat error!\n");
       exit(0);
+  }
+  else{
+    printf("true\n");
+    printf("current->fd:%d\n",current->fd);
   }
 
   strcpy(ifr.ifr_name, "can0"); //指定名字
@@ -36,15 +40,25 @@ static can_t *can_init(int name)
   {
     exit(0);
   }
- 
+   else{
+    printf("ioctl true\n");
+  }
   addr.can_family = AF_CAN;
   addr.can_ifindex = ifr.ifr_ifindex;
   bind(current->fd, (struct sockaddr *)&addr, sizeof(addr));
  
   rfilter[0].can_id = 0x2;
   rfilter[0].can_mask = 0;
-  setsockopt(current->fd, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
- 
+
+ set = setsockopt(current->fd, SOL_CAN_RAW, CAN_RAW_FILTER, &rfilter, sizeof(rfilter));
+  if(set != 0)
+  {
+     exit(0);
+  }
+  else
+  {
+    printf("setsockopt true\n");
+  }
   return current;
 }
  
@@ -56,36 +70,60 @@ static void *can_send_thread(void *arg)
   uint8_t read_ret = 0;
   ZDT_X57_Velocity_Control(1, 0, 1000, 3000.0f, 0);
   
-  write(current->fd, &cmd, sizeof(cmd));
-
-   //如果 ret 不等于帧长度，就说明发送失败 
- if(sizeof(cmd) != ret)  perror("write error");
-   
-  // switch (Motor)
+    // switch (Motor)
   // {
-  // case 1 /* constant-expression */:
+  // case 1 :
   //   /* code */
+  // 当前位置清零
   // ZDT_X57_Reset_CurPos_To_Zero(1);   
   //   break;
   // case 2 :
+  // 解除过压保护/过流保护/过热保护/堵转保护
   // ZDT_X57_Reset_Clog_Pro(1);
   //   break;
   // case 3 :
-  // // ZDT_X57_Read_Sys_Params(1,);
+  // 读取参数
+  // ZDT_X57_Read_Sys_Params(1,);
   //   break;
   // case 4 :
+  // 使能
   //  ZDT_X57_En_Control();
   //   break;
   // case 5 :
-  // ZDT_X57_Torque_Control();
+  // 停止运动
+  // ZDT_X57_Stop_Now();
   //   break;
   // case 6:
-  // ZDT_X57_Velocity_Control();
+  // 多机同步运动
+  // ZDT_X57_Synchronous_motion();
   //   break;
   // default:
   //   break;
   // }
   
+  for(int i = 0 ; i < 16 ; i ++)
+  {
+    printf("cmd[%d]:%d \n",i,cmd[i]);
+  }
+  printf("thread current->fd:%d\n",current->fd);
+  ret = write(current->fd, &cmd, sizeof(cmd));
+  printf("sizeof(cmd):%ld \n",sizeof(cmd)); 
+   //如果 ret 不等于帧长度，就说明发送失败 
+  if(ret > 0){
+    printf("write true\n");
+  }
+  else if(ret == 0)
+  {
+    printf("write zero\n");
+  }
+  else{
+      printf("write false\n");
+      perror("can write error!");
+  }
+//  if(sizeof(cmd) != ret)  perror("write error");
+//  else printf("successful\n");
+
+
   while(1)
   {
     // Write(current->fd, &frame, sizeof(frame));
@@ -102,63 +140,67 @@ static void *can_send_thread(void *arg)
   return NULL;
 }
  
-static void *can_recv_thread(void *arg)
-{
-  int ret, i;
-  //can_frame_t frame;
- // struct timeval tv;
-  // fd_set rset;
-  can_t *current = arg;
+// static void *can_recv_thread(void *arg)
+// {
+//   int ret, i;
+//   can_frame_t frame;
+//  // struct timeval tv;
+//    fd_set rset;
+//   can_t *current = arg;
  
-  while (1)
-  {
-    // tv.tv_sec = 0;
-    // tv.tv_usec = 200;
+//   while (1)
+//   {
+//     // tv.tv_sec = 0;
+//     // tv.tv_usec = 200;
  
-    // FD_ZERO(&rset);
-    // FD_SET(current->fd, &rset);
-    // ret = select(current->fd + 1, &rset, NULL, NULL, NULL);
+//     FD_ZERO(&rset);
+//     FD_SET(current->fd, &rset);
+//     ret = select(current->fd + 1, &rset, NULL, NULL, NULL);
 
-    // if (0 == ret)
-    // {
-    //   return NULL;
-    // }
+//     if (0 == ret)
+//     {
+//       return NULL;
+//     }
 
-    // ret = read(current->fd, &frame, sizeof(frame));
+//     ret = read(current->fd, &frame, sizeof(frame));
 
-    // if (ret < sizeof(frame))
-    // {
-    //   return NULL;
-    // }
+//     // if (ret < sizeof(frame))
+//     // {
+//     //   return NULL;
+//     // }
 
-    // if (current->recv_queue->can_write(current->recv_queue, &frame) == CAN_ERROR)
-    // {
-    // }
+//     // if (current->recv_queue->can_write(current->recv_queue, &frame) == CAN_ERROR)
+//     // {
+//     // }
 
-    
-  }
+
+//   }
  
-  return NULL;
-}
- 
-
-void *CanInit(int arg)
-{ 
+//   return NULL;
+// }
  
 
-  can_t *current = can_init(arg);
+// void *CanInit(int arg)
+// { 
+ 
+
+//   can_t *current = can_init(arg);
 
 
-  pthread_create(&current->send_thread, NULL, can_send_thread, (void *)current);
+//   pthread_create(&current->send_thread, NULL, can_send_thread, (void *)current);
 
-  pthread_create(&current->recv_thread, NULL, can_recv_thread, (void *)current);
-}
+// //  pthread_create(&current->recv_thread, NULL, can_recv_thread, (void *)current);
+// }
 
 // test
 
 int main()
 {
+  can_t *current = can_init();
 
+  pthread_create(&current->send_thread, NULL, can_send_thread, (void *)current);
+  
+  pthread_join(current->send_thread,NULL);
  return 0;
 }
 
